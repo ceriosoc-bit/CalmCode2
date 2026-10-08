@@ -23,10 +23,38 @@
     <li>Nombre: Jugador 2 · Edad: 22</li>
     <li>Nombre: Jugador 3 · Edad: 25</li>
   </ul>
+  <h2>Registro de estado de ánimo</h2>
+  <form id="formulario-animo">
+    <p>
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" placeholder="Nombre ficticio" required>
+    </p>
+    <p>
+      <label for="animo">Estado de ánimo:</label>
+      <select id="animo" required>
+        <option value="">Elige una opción</option>
+        <option value="feliz">Feliz</option>
+        <option value="tranquilo">Tranquilo</option>
+        <option value="triste">Triste</option>
+        <option value="ansioso">Ansioso</option>
+        <option value="enojado">Enojado</option>
+      </select>
+    </p>
+    <button type="submit" class="boton-comenzar">Anotar</button>
+  </form>
+  <p id="resultado-animo"></p>
   <button class="boton-comenzar">Comenzar</button>
   <button class="boton-comenzar">Mi primera página con IA</button>
   <script>
     document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    document.getElementById('formulario-animo').addEventListener('submit', function (evento) {
+      evento.preventDefault();
+      const nombre = document.getElementById('nombre').value;
+      const animo = document.getElementById('animo').value;
+      document.getElementById('resultado-animo').textContent = nombre + ' anotó que se siente ' + animo + '.';
+      this.reset();
+    });
   </script>
 </body>
 </html>
