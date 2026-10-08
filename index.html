@@ -7,9 +7,101 @@
   <style>
     body { font-family: Calibri, Arial, sans-serif; margin: 0; background: #f7fafc; color: #1f2d3d; text-align: center; padding: 80px 24px; }
     h1 { color: #051c2c; font-size: 2.4rem; }
+    p { font-size: 1.2rem; }
+    .boton-comenzar { margin-top: 32px; padding: 14px 36px; font-size: 1.1rem; font-family: inherit; color: #ffffff; background: #1e6fd9; border: none; border-radius: 8px; cursor: pointer; }
+    .boton-comenzar:hover { background: #1858b0; }
   </style>
 </head>
 <body>
   <h1>Cesar Rios</h1>
+  <h2>Registro de estado de ánimo</h2>
+  <form id="formulario-animo">
+    <p>
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" placeholder="Nombre ficticio" required>
+    </p>
+    <p>Estado de ánimo (1 = muy mal, 5 = muy bien):</p>
+    <p>
+      <label><input type="radio" name="animo" value="1" required> 1</label>
+      <label><input type="radio" name="animo" value="2"> 2</label>
+      <label><input type="radio" name="animo" value="3"> 3</label>
+      <label><input type="radio" name="animo" value="4"> 4</label>
+      <label><input type="radio" name="animo" value="5"> 5</label>
+    </p>
+    <p>
+      <label for="nota">Nota (opcional):</label><br>
+      <textarea id="nota" rows="3"></textarea>
+    </p>
+    <button type="submit" class="boton-comenzar">Anotar</button>
+  </form>
+  <p id="resultado-animo"></p>
+  <h2>Registros</h2>
+  <ul id="lista-registros"></ul>
+  <script>
+    // Configuración de Supabase: reemplaza estos valores con los de tu proyecto
+    const SUPABASE_URL = 'https://ftiesosypyyujovcsoyc.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_MVJudOgO2hAyF2FZot8zaw_3FK_xvNr';
+    const URL_REGISTROS = SUPABASE_URL + '/rest/v1/registros';
+    const cabeceras = {
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json'
+    };
+
+    // Datos de ejemplo ficticios: solo se muestran en la página, no se guardan en Supabase
+    const EJEMPLOS = [
+      { nombre: 'Ana Ejemplo', animo: 4, nota: 'Buen día en el trabajo' },
+      { nombre: 'Luis Ficticio', animo: 2, nota: 'Mucho estrés con los exámenes' },
+      { nombre: 'Marta Demo', animo: 5, nota: null },
+      { nombre: 'Diego Prueba', animo: 3, nota: 'Día normal, sin novedades' },
+      { nombre: 'Sofía Muestra', animo: 1, nota: 'Dormí muy mal anoche' }
+    ];
+
+    function pintarRegistro(registro, etiqueta) {
+      const item = document.createElement('li');
+      item.textContent = registro.nombre + ' · ' + registro.animo + '/5' + (registro.nota ? ' · ' + registro.nota : '') + (etiqueta ? ' ' + etiqueta : '');
+      return item;
+    }
+
+    async function cargarRegistros() {
+      const respuesta = await fetch(URL_REGISTROS + '?select=nombre,animo,nota,creado_en&order=creado_en.desc', { headers: cabeceras });
+      if (!respuesta.ok) throw new Error('No se pudieron cargar los registros');
+      const registros = await respuesta.json();
+      const lista = document.getElementById('lista-registros');
+      lista.innerHTML = '';
+      EJEMPLOS.forEach(function (ejemplo) {
+        lista.appendChild(pintarRegistro(ejemplo, '(ejemplo)'));
+      });
+      registros.forEach(function (registro) {
+        lista.appendChild(pintarRegistro(registro, ''));
+      });
+    }
+
+    document.getElementById('formulario-animo').addEventListener('submit', async function (evento) {
+      evento.preventDefault();
+      const resultado = document.getElementById('resultado-animo');
+      const registro = {
+        nombre: document.getElementById('nombre').value.trim(),
+        animo: Number(document.querySelector('input[name="animo"]:checked').value),
+        nota: document.getElementById('nota').value.trim() || null
+      };
+      try {
+        const respuesta = await fetch(URL_REGISTROS, {
+          method: 'POST',
+          headers: Object.assign({ 'Prefer': 'return=minimal' }, cabeceras),
+          body: JSON.stringify(registro)
+        });
+        if (!respuesta.ok) throw new Error('No se pudo guardar el registro');
+        resultado.textContent = 'Registro guardado.';
+        this.reset();
+        await cargarRegistros();
+      } catch (error) {
+        resultado.textContent = 'Error: ' + error.message;
+      }
+    });
+
+    cargarRegistros().catch(function (error) {
+      document.getElementById('resultado-animo').textContent = 'Error: ' + error.message;
+    });
+  </script>
 </body>
 </html>
